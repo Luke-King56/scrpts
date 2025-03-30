@@ -1,7 +1,6 @@
--- MyUILib.lua
+-- MyUILib.lua (UI Library)
 local MyUILib = {}
 
--- Create the main window (a draggable ScreenGui with a window frame)
 function MyUILib.new(title)
     local Players = game:GetService("Players")
     local Player = Players.LocalPlayer
@@ -49,7 +48,6 @@ function MyUILib.new(title)
     WindowObject.Window = Window
     WindowObject.Container = Container
 
-    -- Create a new category (or container) inside the window.
     function WindowObject:Category(name)
         local CategoryFrame = Instance.new("Frame")
         CategoryFrame.Name = "Category - " .. name
@@ -71,7 +69,6 @@ function MyUILib.new(title)
         CatLabel.TextSize = 20
 
         local CategoryObject = {}
-        -- Create a sub-container for elements inside this category.
         local CatContainer = Instance.new("Frame")
         CatContainer.Name = "CatContainer"
         CatContainer.Parent = self.Container
@@ -85,7 +82,6 @@ function MyUILib.new(title)
 
         CategoryObject.Container = CatContainer
 
-        -- Add a Toggle element
         function CategoryObject:Toggle(params, callback)
             local ToggleFrame = Instance.new("Frame")
             ToggleFrame.Name = "Toggle - " .. (params.Title or "Toggle")
@@ -126,7 +122,6 @@ function MyUILib.new(title)
             end)
         end
 
-        -- Add a Dropdown element (supports multi-select)
         function CategoryObject:Dropdown(params, callback)
             local DropdownFrame = Instance.new("Frame")
             DropdownFrame.Name = "Dropdown - " .. (params.Title or "Dropdown")
@@ -175,6 +170,8 @@ function MyUILib.new(title)
             OptionsLayout.Parent = OptionsFrame
             OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+            local optionButtons = {} -- keep track of buttons to update visuals
+
             for i, option in ipairs(options) do
                 local OptionButton = Instance.new("TextButton")
                 OptionButton.Parent = OptionsFrame
@@ -184,12 +181,30 @@ function MyUILib.new(title)
                 OptionButton.TextColor3 = Color3.new(1, 1, 1)
                 OptionButton.Font = Enum.Font.Gotham
                 OptionButton.TextSize = 18
+                OptionButton.BorderSizePixel = 0
+                optionButtons[i] = OptionButton
+
                 OptionButton.MouseButton1Click:Connect(function()
                     if multi then
                         selected[i] = not selected[i]
+                        if selected[i] then
+                            OptionButton.BorderSizePixel = 2
+                            OptionButton.BorderColor3 = Color3.fromRGB(0, 255, 0)
+                            OptionButton.BackgroundTransparency = 0.3
+                        else
+                            OptionButton.BorderSizePixel = 0
+                            OptionButton.BackgroundTransparency = 0
+                        end
                     else
-                        for k in pairs(selected) do selected[k] = false end
+                        for k, btn in pairs(optionButtons) do
+                            selected[k] = false
+                            btn.BorderSizePixel = 0
+                            btn.BackgroundTransparency = 0
+                        end
                         selected[i] = true
+                        OptionButton.BorderSizePixel = 2
+                        OptionButton.BorderColor3 = Color3.fromRGB(0, 255, 0)
+                        OptionButton.BackgroundTransparency = 0.3
                         OptionsFrame.Visible = false
                         open = false
                     end
