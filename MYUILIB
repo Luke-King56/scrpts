@@ -1,0 +1,220 @@
+-- MyUILib.lua
+local MyUILib = {}
+
+-- Create the main window (a draggable ScreenGui with a window frame)
+function MyUILib.new(title)
+    local Players = game:GetService("Players")
+    local Player = Players.LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui")
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "MyUILib"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = PlayerGui
+
+    local Window = Instance.new("Frame")
+    Window.Name = "Window"
+    Window.Parent = ScreenGui
+    Window.AnchorPoint = Vector2.new(0.5, 0.5)
+    Window.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Window.Size = UDim2.new(0, 400, 0, 300)
+    Window.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Window.BorderSizePixel = 0
+    Window.Active = true
+    Window.Draggable = true
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = "Title"
+    TitleLabel.Parent = Window
+    TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title or "UI"
+    TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 24
+
+    local Container = Instance.new("Frame")
+    Container.Name = "Container"
+    Container.Parent = Window
+    Container.Position = UDim2.new(0, 0, 0, 30)
+    Container.Size = UDim2.new(1, 0, 1, -30)
+    Container.BackgroundTransparency = 1
+
+    local UIList = Instance.new("UIListLayout")
+    UIList.Parent = Container
+    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+    UIList.Padding = UDim.new(0, 10)
+
+    local WindowObject = {}
+    WindowObject.Window = Window
+    WindowObject.Container = Container
+
+    -- Create a new category (or container) inside the window.
+    function WindowObject:Category(name)
+        local CategoryFrame = Instance.new("Frame")
+        CategoryFrame.Name = "Category - " .. name
+        CategoryFrame.Parent = self.Container
+        CategoryFrame.Size = UDim2.new(1, -20, 0, 40)
+        CategoryFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        CategoryFrame.BorderSizePixel = 0
+        CategoryFrame.AnchorPoint = Vector2.new(0.5, 0)
+        CategoryFrame.Position = UDim2.new(0.5, 0, 0, 0)
+
+        local CatLabel = Instance.new("TextLabel")
+        CatLabel.Name = "Label"
+        CatLabel.Parent = CategoryFrame
+        CatLabel.Size = UDim2.new(1, 0, 1, 0)
+        CatLabel.BackgroundTransparency = 1
+        CatLabel.Text = name
+        CatLabel.TextColor3 = Color3.new(1, 1, 1)
+        CatLabel.Font = Enum.Font.GothamBold
+        CatLabel.TextSize = 20
+
+        local CategoryObject = {}
+        -- Create a sub-container for elements inside this category.
+        local CatContainer = Instance.new("Frame")
+        CatContainer.Name = "CatContainer"
+        CatContainer.Parent = self.Container
+        CatContainer.Size = UDim2.new(1, -20, 0, 0)
+        CatContainer.BackgroundTransparency = 1
+
+        local CatList = Instance.new("UIListLayout")
+        CatList.Parent = CatContainer
+        CatList.SortOrder = Enum.SortOrder.LayoutOrder
+        CatList.Padding = UDim.new(0, 5)
+
+        CategoryObject.Container = CatContainer
+
+        -- Add a Toggle element
+        function CategoryObject:Toggle(params, callback)
+            local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.Name = "Toggle - " .. (params.Title or "Toggle")
+            ToggleFrame.Parent = self.Container
+            ToggleFrame.Size = UDim2.new(1, -20, 0, 30)
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            ToggleFrame.BorderSizePixel = 0
+
+            local ToggleLabel = Instance.new("TextLabel")
+            ToggleLabel.Parent = ToggleFrame
+            ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+            ToggleLabel.BackgroundTransparency = 1
+            ToggleLabel.Text = params.Title or "Toggle"
+            ToggleLabel.TextColor3 = Color3.new(1, 1, 1)
+            ToggleLabel.Font = Enum.Font.Gotham
+            ToggleLabel.TextSize = 18
+
+            local ToggleButton = Instance.new("TextButton")
+            ToggleButton.Parent = ToggleFrame
+            ToggleButton.Size = UDim2.new(0.25, 0, 0.8, 0)
+            ToggleButton.AnchorPoint = Vector2.new(1, 0.5)
+            ToggleButton.Position = UDim2.new(1, -10, 0.5, 0)
+            ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+            ToggleButton.Text = params.Default and "On" or "Off"
+            ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+            ToggleButton.Font = Enum.Font.GothamBold
+            ToggleButton.TextSize = 18
+
+            local state = params.Default or false
+
+            ToggleButton.MouseButton1Click:Connect(function()
+                state = not state
+                ToggleButton.Text = state and "On" or "Off"
+                ToggleButton.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+                if callback then
+                    callback(state)
+                end
+            end)
+        end
+
+        -- Add a Dropdown element (supports multi-select)
+        function CategoryObject:Dropdown(params, callback)
+            local DropdownFrame = Instance.new("Frame")
+            DropdownFrame.Name = "Dropdown - " .. (params.Title or "Dropdown")
+            DropdownFrame.Parent = self.Container
+            DropdownFrame.Size = UDim2.new(1, -20, 0, 30)
+            DropdownFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            DropdownFrame.BorderSizePixel = 0
+
+            local DropdownLabel = Instance.new("TextLabel")
+            DropdownLabel.Parent = DropdownFrame
+            DropdownLabel.Size = UDim2.new(0.7, 0, 1, 0)
+            DropdownLabel.BackgroundTransparency = 1
+            DropdownLabel.Text = params.Title or "Dropdown"
+            DropdownLabel.TextColor3 = Color3.new(1, 1, 1)
+            DropdownLabel.Font = Enum.Font.Gotham
+            DropdownLabel.TextSize = 18
+
+            local DropdownButton = Instance.new("TextButton")
+            DropdownButton.Parent = DropdownFrame
+            DropdownButton.Size = UDim2.new(0.25, 0, 0.8, 0)
+            DropdownButton.AnchorPoint = Vector2.new(1, 0.5)
+            DropdownButton.Position = UDim2.new(1, -10, 0.5, 0)
+            DropdownButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            DropdownButton.Text = "Select"
+            DropdownButton.TextColor3 = Color3.new(1, 1, 1)
+            DropdownButton.Font = Enum.Font.GothamBold
+            DropdownButton.TextSize = 18
+
+            local options = params.Options or {}
+            local defaultIndices = params.Default or {}
+            local multi = params.Multi or false
+            local selected = {}
+            for _, i in ipairs(defaultIndices) do
+                selected[i] = true
+            end
+
+            local open = false
+            local OptionsFrame = Instance.new("Frame")
+            OptionsFrame.Parent = DropdownFrame
+            OptionsFrame.Size = UDim2.new(1,0,0, #options * 30)
+            OptionsFrame.Position = UDim2.new(0,0,1,0)
+            OptionsFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            OptionsFrame.Visible = false
+
+            local OptionsLayout = Instance.new("UIListLayout")
+            OptionsLayout.Parent = OptionsFrame
+            OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            for i, option in ipairs(options) do
+                local OptionButton = Instance.new("TextButton")
+                OptionButton.Parent = OptionsFrame
+                OptionButton.Size = UDim2.new(1,0,0,30)
+                OptionButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                OptionButton.Text = option
+                OptionButton.TextColor3 = Color3.new(1, 1, 1)
+                OptionButton.Font = Enum.Font.Gotham
+                OptionButton.TextSize = 18
+                OptionButton.MouseButton1Click:Connect(function()
+                    if multi then
+                        selected[i] = not selected[i]
+                    else
+                        for k in pairs(selected) do selected[k] = false end
+                        selected[i] = true
+                        OptionsFrame.Visible = false
+                        open = false
+                    end
+                    if callback then
+                        local result = {}
+                        for idx, val in pairs(selected) do
+                            if val then
+                                table.insert(result, idx)
+                            end
+                        end
+                        callback(result)
+                    end
+                end)
+            end
+
+            DropdownButton.MouseButton1Click:Connect(function()
+                open = not open
+                OptionsFrame.Visible = open
+            end)
+        end
+
+        return CategoryObject
+    end
+
+    return WindowObject
+end
+
+return MyUILib
